@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Form
-from fastapi.responses import HTMLResponse, PlainTextResponse 
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
+from htmlcontent import hero_content as htmlcontent
 
 load_dotenv()
 
@@ -37,17 +38,18 @@ class UserInput(BaseModel):
 
 @app.get("/")
 async def main():
-    content = """
-<body>
-<form action="/ask" enctype="multipart/form-data" method="post">
-<input name="query" type="text">
-<input type="submit">
-</form>
-</body>
-    """
+    content = htmlcontent
     return HTMLResponse(content=content)
 
 @app.post("/ask")
 async def startfunction(query: str = Form(...)):
-    response = legalquery(query)  
-    return PlainTextResponse(content=response)
+    response = legalquery(query)
+    content = f"""
+    <body>
+    <pre>{response}</pre>
+    <form action="/" method="get">
+        <button type="submit">Got more doubts?</button>
+    </form>
+    </body>
+    """
+    return HTMLResponse(content=content)
