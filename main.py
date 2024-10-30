@@ -10,34 +10,31 @@ load_dotenv()
 
 app = FastAPI()
 
-def legalquery(user_query_prompt):
-    if (user_query_prompt != ""):
+def legalquery(user_query_prompt: str):
+    if user_query_prompt:
         parser = StrOutputParser()
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7, max_toxens=500)
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7, max_tokens=500)
         system_prompt = (
-            "you are an indian legal expert. any questions asked you should be answered as if you are an indian legal advisor."
-            "the user will send you a prompt, which will be a query or doubt related to law."
-            "you have to give the output in such a way that you first tell the overview of situation, what are the IPCs involved and how to resolve the situation."
-            "dont encourage any other questions(only indian law related questions)"
-            "if you dont know answer, return 'i dont have an answer for your query'"
+            "You are an Indian legal expert. Any questions asked should be answered as if you are an Indian legal advisor. "
+            "The user will send you a prompt, which will be a query or doubt related to law. "
+            "Provide the output by first explaining the situation, detailing the relevant IPC sections, and suggesting ways to resolve it. "
+            "Don't entertain unrelated questions. If you don’t know the answer, respond with 'I don't have an answer for your query'."
         )
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt),
-                ("user", "user_query_prompt:{input}"),   
+                ("user", user_query_prompt),  
             ]
         )
 
-
         chain = prompt | llm | parser
-        return chain.invoke({"input": user_query_prompt})      
-
+        return chain.invoke({"input": user_query_prompt})
     else:
-        return "you sent an empty prompt request." 
+        return "You sent an empty prompt request."
 
 class UserInput(BaseModel):
     user_query_prompt: str | None = None
-0
+
 @app.get("/")
 async def main():
     content = """
@@ -46,11 +43,11 @@ async def main():
 <input name="query" type="text">
 <input type="submit">
 </form>
+</body>
     """
     return HTMLResponse(content=content)
 
 @app.post("/ask")
 async def startfunction(query: str = Form(...)):
-    response = legalquery(UserInput(query=query))
+    response = legalquery(query)  
     return PlainTextResponse(content=response)
-  
